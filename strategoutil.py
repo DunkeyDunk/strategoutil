@@ -58,7 +58,8 @@ def extract_state(text, var, control_period):
     :rtype: float
     """
     float_re = r"[-+]?(\d+(\.\d*)?|\.\d+)([eE][-+]?\d+)?"
-    pattern = var + r":\n\[0\]:( \(" + float_re + "," + float_re + r"\))*"
+    var = var if "[" not in var else var.replace('[', '\\[').replace(']', '\\]')
+    pattern = var + r":\r?\n\[0\]:( \(" + float_re + "," + float_re + r"\))*"
     result = re.search(pattern, text)
     if result is None:
         raise RuntimeError(
@@ -184,7 +185,7 @@ def run_stratego(model_file, query_file="", learning_args=None, verifyta_command
     :type verifyta_command: str
     :return: The output as produced by Uppaal Stratego.
     :rtype: str
-    """
+    """ 
     learning_args = {} if learning_args is None else learning_args
     args = {
         "verifyta": verifyta_command,
@@ -304,7 +305,7 @@ class StrategoController:
     def insert_state(self):
         """
         Insert the current state values of the variables at the appropriate position in the
-        simulation \*.xml file indicated by the :py:attr:`tagRule`.
+        simulation \\*.xml file indicated by the :py:attr:`tagRule`.
         """
         for name, value in self.states.items():
             tag = self.tagRule.format(name)
@@ -353,7 +354,7 @@ class StrategoController:
 
     def run(self, query_file="", learning_args=None, verifyta_command="verifyta"):
         """
-        Runs verifyta with requested queries and parameters that are either part of the \*.xml model
+        Runs verifyta with requested queries and parameters that are either part of the \\*.xml model
         file or explicitly specified.
 
         :param query_file: The file name of the query file where the queries are written to.
@@ -633,6 +634,7 @@ class MPCsetup:
         :rtype: float
         """
         float_re = r"[-+]?(\d+(\.\d*)?|\.\d+)([eE][-+]?\d+)?"
+        var = self.action_variable if "[" not in self.action_variable else self.action_variable.replace('[', '\\[').replace(']', '\\]')
         pattern = self.action_variable + r":\n\[0\]:( \(" + float_re + "," + float_re + r"\))*"
         result = re.search(pattern, stratego_output)
         if result is None:
