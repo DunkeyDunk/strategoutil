@@ -635,7 +635,7 @@ class MPCsetup:
         """
         float_re = r"[-+]?(\d+(\.\d*)?|\.\d+)([eE][-+]?\d+)?"
         var = self.action_variable if "[" not in self.action_variable else self.action_variable.replace('[', '\\[').replace(']', '\\]')
-        pattern = self.action_variable + r":\n\[0\]:( \(" + float_re + "," + float_re + r"\))*"
+        pattern = self.action_variable + r":\r?\n\[0\]:( \(" + float_re + "," + float_re + r"\))*"
         result = re.search(pattern, stratego_output)
         if result is None:
             raise RuntimeError(
