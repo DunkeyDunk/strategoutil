@@ -239,7 +239,10 @@ def print_progress_bar(i, max, post_text):
     """
     n_bar = 20  # Size of progress bar.
     j = i / max
+    
+    CSI = "\x1B["
     sys.stdout.write('\r')
+    sys.stdout.write(CSI + "K")  # Clear line.
     sys.stdout.write(f"[{'=' * int(n_bar * j):{n_bar}s}] {int(100 * j)}%  {post_text}")
     sys.stdout.flush()
 
@@ -408,13 +411,16 @@ class MPCsetup:
     :type action_variable: str
     :param debug: Whether or not to run in debug mode.
     :type debug: bool
+    :pram custom_progress_text: Custom text to be printed in the progress bar. If not provided, the
+    :type custom_progress_text: str | function
     :ivar controller: The controller object used for interacting with Uppaal Stratego.
     :vartype controller: :class:`~StrategoController`
     """
 
     def __init__(self, model_template_file, output_file_path=None, query_file="",
                  model_cfg_dict=None, learning_args=None, verifyta_command="verifyta",
-                 external_simulator=False, action_variable=None, debug=False):
+                 external_simulator=False, action_variable=None, debug=False,
+                 custom_progress_text="progress"):
         self.model_template_file = model_template_file
         self.output_file_path = output_file_path
         self.query_file = query_file
@@ -428,6 +434,7 @@ class MPCsetup:
                 f"in the model configuration.")
         self.action_variable = action_variable
         self.debug = debug
+        self.custom_progress_text = custom_progress_text
         self.controller = StrategoController(self.model_template_file, self.model_cfg_dict)
 
     def step_without_sim(self, control_period, horizon, duration, step, **kwargs):
@@ -533,7 +540,11 @@ class MPCsetup:
         for step in range(duration):
             # Only print progress to stdout if results are printed to a file.
             if self.output_file_path:
-                print_progress_bar(step, duration, "progress")
+                if callable(self.custom_progress_text):
+                    text = self.custom_progress_text(step, duration)
+                else:
+                    text = self.custom_progress_text
+                print_progress_bar(step, duration, text)
 
             result = self.step_without_sim(control_period, horizon, duration, step, **kwargs)
 
