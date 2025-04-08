@@ -258,6 +258,8 @@ class StrategoController:
     :type model_cfg_dict: dict
     :param cleanup: Whether or not to clean up the temporarily simulation file after being used.
     :type cleanup: bool
+    :param exp_ID: The experiment ID to be used in the simulation file name.
+    :type exp_ID: int | str
     :ivar states: Dictionary containing the current state of the system, where a state is a pair of
         variable name and value. It is initialized with the values from *model_cfg_dict*.
     :vartype states: bool
@@ -267,9 +269,10 @@ class StrategoController:
     :vartype tagRule: str
     """
 
-    def __init__(self, model_template_file, model_cfg_dict, cleanup=True):
+    def __init__(self, model_template_file, model_cfg_dict, cleanup=True, exp_ID = None):
         self.template_file = model_template_file
-        self.simulation_file = model_template_file.replace(".xml", "_sim.xml")
+        self.exp_ID = exp_ID
+        self.simulation_file = model_template_file.replace(".xml", f"_sim{self.exp_ID or ''}.xml")
         self.cleanup = cleanup  # TODO: this variable seems to be not used. Can it be safely removed?
         self.states = model_cfg_dict.copy()
         self.tagRule = "//TAG_{}"
@@ -413,6 +416,8 @@ class MPCsetup:
     :type debug: bool
     :pram custom_progress_text: Custom text to be printed in the progress bar. If not provided, the
     :type custom_progress_text: str | function
+    :param exp_ID: The experiment ID to be used in the simulation file name.
+    :type exp_ID: int | str
     :ivar controller: The controller object used for interacting with Uppaal Stratego.
     :vartype controller: :class:`~StrategoController`
     """
@@ -420,7 +425,7 @@ class MPCsetup:
     def __init__(self, model_template_file, output_file_path=None, query_file="",
                  model_cfg_dict=None, learning_args=None, verifyta_command="verifyta",
                  external_simulator=False, action_variable=None, debug=False,
-                 custom_progress_text="progress"):
+                 custom_progress_text="progress", exp_ID=None):
         self.model_template_file = model_template_file
         self.output_file_path = output_file_path
         self.query_file = query_file
@@ -435,7 +440,8 @@ class MPCsetup:
         self.action_variable = action_variable
         self.debug = debug
         self.custom_progress_text = custom_progress_text
-        self.controller = StrategoController(self.model_template_file, self.model_cfg_dict)
+        self.exp_ID = exp_ID
+        self.controller = StrategoController(self.model_template_file, self.model_cfg_dict, exp_ID = self.exp_ID)
 
     def step_without_sim(self, control_period, horizon, duration, step, **kwargs):
         """
@@ -469,7 +475,7 @@ class MPCsetup:
 
         # To debug errors from verifyta one can save intermediate simulation file.
         if self.debug:
-            self.controller.debug_copy(self.model_template_file.replace(".xml", "_debug.xml"))
+            self.controller.debug_copy(self.model_template_file.replace(".xml", f"_debug{self.exp_ID  or ''}.xml"))
 
         # Create the new query file for the next step.
         final = horizon * control_period + self.controller.get_state("t")
