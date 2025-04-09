@@ -442,6 +442,7 @@ class MPCsetup:
         self.custom_progress_text = custom_progress_text
         self.exp_ID = exp_ID
         self.controller = StrategoController(self.model_template_file, self.model_cfg_dict, exp_ID = self.exp_ID)
+        self.skip_steps = 0
 
     def step_without_sim(self, control_period, horizon, duration, step, **kwargs):
         """
@@ -543,7 +544,7 @@ class MPCsetup:
             raise RuntimeError(
                 f"Cannot find the supplied verifyta command: {self.verifyta_command}")
 
-        for step in range(duration):
+        for step in range(self.skip_steps, duration):
             # Only print progress to stdout if results are printed to a file.
             if self.output_file_path:
                 if callable(self.custom_progress_text):
